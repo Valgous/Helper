@@ -1,0 +1,432 @@
+using System;
+using System.Diagnostics;
+using System.Web;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+
+namespace Helper
+{
+    public partial class Helper : Form
+    {
+        public Helper()
+        {
+            InitializeComponent();
+        }
+
+        private void btnshell_Click(object sender, EventArgs e)
+        {
+            // Создаем новый процесс
+            Process process = new Process();
+
+            // Настраиваем процесс для запуска PowerShell от имени администратора
+            process.StartInfo.FileName = "powershell.exe";
+            process.StartInfo.Arguments = "irm https://get.activated.win | iex";
+            process.StartInfo.Verb = "runas"; // Запуск от имени администратора
+            process.StartInfo.UseShellExecute = true;
+
+            try
+            {
+                // Запускаем процесс
+                process.Start();
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // Обработка исключения, если пользователь отказался от запуска с правами администратора
+                MessageBox.Show("Для выполнения этой операции требуются права администратора.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btndriver_Click(object sender, EventArgs e)
+        {
+            // Получаем текст из поля ввода tbdriver
+            string inputText = tbdriver.Text.Trim();
+
+            // Проверяем, что поле ввода не пустое
+            if (string.IsNullOrEmpty(inputText))
+            {
+                MessageBox.Show("Поле ввода не должно быть пустым.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // Прерываем выполнение, если поле пустое
+            }
+
+            // Применяем процентное кодирование URL к тексту из tbdriver
+            string encodedText = HttpUtility.UrlEncode(inputText);
+
+            // Формируем полную ссылку
+            string url = $"https://driverpack.io/ru/search?query={encodedText}"; // Замените на вашу базовую ссылку
+
+            // Открываем ссылку в браузере по умолчанию
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Не удалось открыть ссылку: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        private void tbdriver_Click(object sender, EventArgs e)
+        {
+            tbdriver.Text = null;
+        }
+
+        private async void btncomplex_Click(object sender, EventArgs e)
+        {
+            // Отчет о проделанных действиях
+            string report = "Отчет о выполненных задачах:\n";
+
+            try
+            {
+                // 1. Проверить и установить обновления системы без перезагрузки
+                report += "1. Проверка и установка обновлений системы...\n";
+                await InstallSystemUpdatesAsync();
+                report += "   Обновления системы установлены.\n";
+
+                // 2. Запуск Privazer для очистки системы
+                report += "2. Запуск Privazer для очистки системы...\n";
+                RunPrivazer();
+                report += "   Privazer завершил сканирование.\n";
+
+                // 3. Проверка и обновление браузеров
+                report += "3. Проверка и обновление браузеров...\n";
+                UpdateBrowsers();
+                report += "   Браузеры обновлены.\n";
+
+                // 4. Установка и запуск Malwarebytes
+                report += "4. Установка и запуск Malwarebytes...\n";
+                InstallAndRunMalwarebytes();
+                report += "   Malwarebytes завершил сканирование.\n";
+
+                // 5. Скачивание, переименование и запуск DCureIt
+                report += "5. Скачивание и запуск DCureIt...\n";
+                await DownloadAndRunDCureItAsync();
+                report += "   DCureIt завершил сканирование и был удален.\n";
+
+                // 6. Запуск sfc /scannow
+                report += "6. Проверка системных файлов (sfc /scannow)...\n";
+                RunSfcScan();
+                report += "   Проверка системных файлов завершена.\n";
+
+                // 7. Перезагрузка компьютера
+                report += "7. Перезагрузка компьютера...\n";
+                SaveReportToDesktop(report); // Сохраняем отчет перед перезагрузкой
+                RebootComputer();
+            }
+            catch (Exception ex)
+            {
+                report += $"Ошибка: {ex.Message}\n";
+                MessageBox.Show($"Произошла ошибка: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Метод для установки обновлений системы
+        private async Task InstallSystemUpdatesAsync()
+        {
+            // Используем PowerShell для установки обновлений
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = "Install-WindowsUpdate -AcceptAll -IgnoreReboot",
+                Verb = "runas", // Запуск от имени администратора
+                UseShellExecute = true
+            };
+
+            using (Process? process = Process.Start(psi))
+            {
+                if (process != null)
+                {
+                    await process.WaitForExitAsync();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Не удалось запустить процесс PowerShell.");
+                }
+            }
+        }
+
+        // Метод для запуска Privazer
+        private void RunPrivazer()
+        {
+            string privazerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Programs", "Privazer.exe");
+
+            if (!File.Exists(privazerPath))
+            {
+                throw new FileNotFoundException("Privazer не найден.");
+            }
+
+            Process? process = Process.Start(privazerPath);
+            if (process != null)
+            {
+                process.WaitForExit();
+            }
+            else
+            {
+                throw new InvalidOperationException("Не удалось запустить Privazer.");
+            }
+        }
+
+        // Метод для обновления браузеров
+        private void UpdateBrowsers()
+        {
+            // Пример для Google Chrome (можно добавить другие браузеры)
+            string chromePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Google", "Chrome", "Application", "chrome.exe");
+
+            if (File.Exists(chromePath))
+            {
+                Process? process = Process.Start(chromePath, "--update");
+                if (process != null)
+                {
+                    process.WaitForExit();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Не удалось запустить Google Chrome для обновления.");
+                }
+            }
+        }
+
+        // Метод для установки и запуска Malwarebytes
+        private void InstallAndRunMalwarebytes()
+        {
+            string installerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Programs", "MalwareInstaller.exe");
+
+            if (!File.Exists(installerPath))
+            {
+                throw new FileNotFoundException("Установщик Malwarebytes не найден.");
+            }
+
+            Process? installProcess = Process.Start(installerPath, "/silent");
+            if (installProcess != null)
+            {
+                installProcess.WaitForExit();
+            }
+            else
+            {
+                throw new InvalidOperationException("Не удалось запустить установщик Malwarebytes.");
+            }
+
+            string publicDesktopPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
+            Process? malwarebytesProcess = Process.Start(publicDesktopPath, "Malwarebytes.exe");
+            if (malwarebytesProcess != null)
+            {
+                malwarebytesProcess.WaitForExit();
+            }
+            else
+            {
+                throw new InvalidOperationException("Не удалось запустить Malwarebytes.");
+            }
+        }
+
+        // Метод для скачивания и запуска DCureIt
+        private async Task DownloadAndRunDCureItAsync()
+        {
+            string downloadUrl = "https://example.com/dcureit.exe"; // Замените на реальную ссылку
+            string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Programs", "dcureit.exe");
+
+            using (HttpClient client = new HttpClient())
+            {
+                byte[] fileBytes = await client.GetByteArrayAsync(downloadUrl);
+                File.WriteAllBytes(savePath, fileBytes);
+            }
+
+            Process? process = Process.Start(savePath);
+            if (process != null)
+            {
+                process.WaitForExit();
+            }
+            else
+            {
+                throw new InvalidOperationException("Не удалось запустить DCureIt.");
+            }
+
+            File.Delete(savePath); // Удаление после завершения
+        }
+
+        // Метод для запуска sfc /scannow
+        private void RunSfcScan()
+        {
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = "/c sfc /scannow",
+                Verb = "runas", // Запуск от имени администратора
+                UseShellExecute = true
+            };
+
+            using (Process? process = Process.Start(psi))
+            {
+                if (process != null)
+                {
+                    process.WaitForExit();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Не удалось запустить sfc /scannow.");
+                }
+            }
+        }
+
+        // Метод для перезагрузки компьютера
+        private void RebootComputer()
+        {
+            Process.Start("shutdown.exe", "/r /t 0");
+        }
+
+        // Метод для сохранения отчета на рабочий стол
+        private void SaveReportToDesktop(string report)
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string reportPath = Path.Combine(desktopPath, "Отчет.txt");
+
+            File.WriteAllText(reportPath, report);
+        }
+
+        private void btnsafe_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Запуск команды для перезагрузки в безопасный режим
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "shutdown.exe",
+                    Arguments = "/r /o /f /t 0", // Параметры для перезагрузки в безопасный режим
+                    Verb = "runas", // Запуск от имени администратора
+                    UseShellExecute = true
+                };
+
+                // Запуск процесса
+                Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при попытке перезагрузки в безопасный режим: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnanydesk_Click(object sender, EventArgs e)
+        {
+            // Путь к файлу AnyDesk.exe в папке Programs
+            string anyDeskPath = Path.Combine(Application.StartupPath, "Programs", "AnyDesk.exe");
+
+            // Проверяем, существует ли файл AnyDesk.exe
+            if (!File.Exists(anyDeskPath))
+            {
+                MessageBox.Show("Файл AnyDesk.exe не найден в папке Programs.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Аргументы для установки AnyDesk
+            string arguments = $"--install \"C:\\Program Files (x86)\\AnyDesk\" --start-with-win --create-shortcuts --create-desktop-icon --silent";
+
+            // Запуск процесса установки
+            Process process = new Process();
+            process.StartInfo.FileName = anyDeskPath;
+            process.StartInfo.Arguments = arguments;
+            process.StartInfo.Verb = "runas"; // Запуск с правами администратора
+            process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden; // Скрыть окно установки
+
+            try
+            {
+                process.Start();
+                process.WaitForExit(); // Ожидание завершения установки
+
+                // Путь к ярлыку на рабочем столе
+                string publicDesktopPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
+                string shortcutPath = Path.Combine(publicDesktopPath, "AnyDesk.lnk");
+
+                // Проверяем, существует ли ярлык
+                if (File.Exists(shortcutPath))
+                {
+                    // Новое имя ярлыка
+                    string newShortcutPath = Path.Combine(publicDesktopPath, "Онлайн поддержка Байт Бокс (Валентин) +7-901-417-40-77.lnk");
+
+                    // Переименовываем ярлык
+                    File.Move(shortcutPath, newShortcutPath);
+
+                    MessageBox.Show("AnyDesk успешно установлен и ярлык переименован.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("AnyDesk установлен, но ярлык на рабочем столе не найден.", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при установке AnyDesk: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                process.Dispose();
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var cmdline = new cmdline();
+            cmdline.Show();
+        }
+
+        private void btncore_Click(object sender, EventArgs e)
+        {
+            // Получаем текст из поля tbcore
+            string coreText = tbcore.Text.Trim();
+
+            // Проверка на пустое значение
+            if (string.IsNullOrEmpty(coreText))
+            {
+                MessageBox.Show("Поле не должно быть пустым.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Проверка на числовое значение
+            if (!int.TryParse(coreText, out int coreCount) || coreCount <= 0)
+            {
+                MessageBox.Show("Введите корректное число ядер (целое положительное число).", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Подтверждение перед выполнением команды
+            var confirmResult = MessageBox.Show(
+                $"Внимание! Данная операция предназначена для многоядерных процессоров Xeon. Вы уверены, что хотите установить количество ядер на {coreCount}?",
+                "Подтверждение",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirmResult == DialogResult.Yes)
+            {
+                try
+                {
+                    // Формируем команду
+                    string command = $"bcdedit.exe /set numproc {coreCount}";
+
+                    // Запуск командной строки от имени администратора
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = $"/c {command}",
+                        Verb = "runas", // Запуск от имени администратора
+                        UseShellExecute = true
+                    };
+
+                    // Выполнение команды
+                    using (Process process = Process.Start(psi))
+                    {
+                        process.WaitForExit();
+                    }
+
+                    MessageBox.Show("Команда успешно выполнена.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при выполнении команды: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+    }
+}
