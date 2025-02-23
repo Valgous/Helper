@@ -12,9 +12,9 @@ namespace Helper
 {
     public partial class Helper : Form
     {
-        private const string CurrentVersion = "1.0.1"; // Текущая версия программы (можно заменить на хэш коммита при сборке)
-        private const string GitHubRepoApiUrl = "https://api.github.com/repos/Valgous/Helper/commits/master"; // Замените на ваш репозиторий и ветку
-        private const string GitHubRepoUrl = "https://github.com/Valgous/Helper"; // URL репозитория
+        private const string CurrentVersion = "1.0.1"; // Текущая версия программы
+        private const string GitHubRepoApiUrl = "https://api.github.com/repos/Valgous/Helper/releases/latest"; // API для последнего релиза
+        private const string GitHubDownloadUrl = "https://github.com/Valgous/Helper/releases/latest"; // URL для скачивания
 
         public Helper()
         {
@@ -91,18 +91,17 @@ namespace Helper
                     string json = await client.GetStringAsync(GitHubRepoApiUrl);
                     using (JsonDocument doc = JsonDocument.Parse(json))
                     {
-                        string latestCommitSha = doc.RootElement.GetProperty("sha").GetString().Substring(0, 7); // Короткий хэш коммита
-                        // Предполагается, что CurrentVersion — это хэш коммита, с которым собрана текущая версия
-                        if (CurrentVersion != latestCommitSha)
+                        string latestVersion = doc.RootElement.GetProperty("tag_name").GetString();
+                        if (IsNewerVersion(latestVersion, CurrentVersion))
                         {
                             var result = MessageBox.Show(
-                                $"Обнаружены изменения в репозитории (последний коммит: {latestCommitSha}). Обновить?",
+                                $"Доступна новая версия: {latestVersion}. Текущая версия: {CurrentVersion}. Обновить?",
                                 "Обновление",
                                 MessageBoxButtons.YesNo,
                                 MessageBoxIcon.Information);
                             if (result == DialogResult.Yes)
                             {
-                                Process.Start(new ProcessStartInfo { FileName = GitHubRepoUrl, UseShellExecute = true });
+                                Process.Start(new ProcessStartInfo { FileName = GitHubDownloadUrl, UseShellExecute = true });
                                 Application.Exit();
                             }
                         }
@@ -113,6 +112,13 @@ namespace Helper
             {
                 MessageBox.Show($"Ошибка проверки обновлений: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private bool IsNewerVersion(string latest, string current)
+        {
+            Version vLatest = new Version(latest.TrimStart('v')); // Убираем 'v' если есть
+            Version vCurrent = new Version(current);
+            return vLatest > vCurrent;
         }
 
         private async void btncomplex_Click(object sender, EventArgs e)

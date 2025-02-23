@@ -110,18 +110,18 @@
             // 
             // tbcore
             // 
-            tbcore.Location = new Point(628, 415);
+            tbcore.Location = new Point(615, 415);
             tbcore.Name = "tbcore";
-            tbcore.Size = new Size(160, 23);
+            tbcore.Size = new Size(173, 23);
             tbcore.TabIndex = 8;
             // 
             // btncore
             // 
-            btncore.Location = new Point(628, 386);
+            btncore.Location = new Point(615, 386);
             btncore.Name = "btncore";
-            btncore.Size = new Size(160, 23);
+            btncore.Size = new Size(173, 23);
             btncore.TabIndex = 7;
-            btncore.Text = "Установить кол-во ядер";
+            btncore.Text = "Установить кол-во потоков";
             btncore.UseVisualStyleBackColor = true;
             btncore.Click += btncore_Click;
             // 
