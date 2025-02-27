@@ -15,12 +15,29 @@ namespace Helper
         private const string CurrentVersion = "1.0.1"; // Текущая версия программы
         private const string GitHubRepoApiUrl = "https://api.github.com/repos/Valgous/Helper/releases/latest"; // API для последнего релиза
         private const string GitHubDownloadUrl = "https://github.com/Valgous/Helper/releases/latest"; // URL для скачивания
+        private static readonly string ProgramsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Programs");
+        private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+        private dynamic ConfigData;
 
         public Helper()
         {
             InitializeComponent();
+            LoadConfig();
+            Directory.CreateDirectory(ProgramsDir); // Создаем папку Programs, если её нет
             CheckAdminAndInternetOnStartup();
             CheckForUpdates();
+        }
+
+        private void LoadConfig()
+        {
+            if (!File.Exists(ConfigPath))
+            {
+                MessageBox.Show("Файл конфигурации config.json не найден.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+                return;
+            }
+            string json = File.ReadAllText(ConfigPath);
+            ConfigData = JsonDocument.Parse(json).RootElement.GetProperty("DownloadUrls");
         }
 
         private void CheckAdminAndInternetOnStartup()
@@ -121,6 +138,32 @@ namespace Helper
             return vLatest > vCurrent;
         }
 
+        private async Task DownloadFileAsync(string url, string filePath)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                // Примечание: Bitrix требует эмуляции нажатия на кнопку "Скачать".
+                // Здесь предполагается, что ссылки предоставляют прямой доступ к файлам.
+                byte[] fileBytes = await client.GetByteArrayAsync(url);
+                File.WriteAllBytes(filePath, fileBytes);
+            }
+        }
+
+        private async Task CleanupProgramsFolderAsync()
+        {
+            foreach (string file in Directory.GetFiles(ProgramsDir))
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка удаления файла {file}: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
         private async void btncomplex_Click(object sender, EventArgs e)
         {
             if (!IsInternetAvailable() && MessageBox.Show("Нет интернета. Продолжить без некоторых функций?", "Предупреждение", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
@@ -210,6 +253,7 @@ namespace Helper
                 {
                     UpdateButtonText(completedTasks, totalTasks, taskNames[6]);
                     report += "7. Перезагрузка...\n";
+                    await CleanupProgramsFolderAsync(); // Очистка перед перезагрузкой
                     SaveReportToDesktop(report);
                     RebootComputer();
                     completedTasks++;
@@ -285,8 +329,11 @@ namespace Helper
 
         private async Task RunPrivazerAsync()
         {
-            string privazerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Programs", "Privazer.exe");
-            if (!File.Exists(privazerPath)) throw new FileNotFoundException("Privazer не найден.");
+            string privazerPath = Path.Combine(ProgramsDir, "Privazer.exe");
+            if (!File.Exists(privazerPath))
+            {
+                await DownloadFileAsync(ConfigData.GetProperty("Privazer").GetString(), privazerPath);
+            }
             Process? process = Process.Start(privazerPath);
             if (process != null) await process.WaitForExitAsync();
             else throw new InvalidOperationException("Не удалось запустить Privazer.");
@@ -305,8 +352,11 @@ namespace Helper
 
         private async Task InstallAndRunMalwarebytesAsync()
         {
-            string installerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Programs", "MalwareInstaller.exe");
-            if (!File.Exists(installerPath)) throw new FileNotFoundException("Malwarebytes не найден.");
+            string installerPath = Path.Combine(ProgramsDir, "MalwareInstaller.exe");
+            if (!File.Exists(installerPath))
+            {
+                await DownloadFileAsync(ConfigData.GetProperty("MalwareInstaller").GetString(), installerPath);
+            }
             Process? installProcess = Process.Start(installerPath, "/silent");
             if (installProcess != null) await installProcess.WaitForExitAsync();
             else throw new InvalidOperationException("Не удалось установить Malwarebytes.");
@@ -320,8 +370,8 @@ namespace Helper
         private async Task DownloadAndRunDCureItAsync()
         {
             if (!IsInternetAvailable()) throw new InvalidOperationException("Нет интернета для загрузки DCureIt.");
-            string downloadUrl = "https://free.drweb.ru/download+cureit/gr/?lng=ru"; // Обновлённая ссылка
-            string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Programs", "dcureit.exe");
+            string downloadUrl = "https://free.drweb.ru/download+cureit/gr/?lng=ru";
+            string savePath = Path.Combine(ProgramsDir, "dcureit.exe");
 
             using (HttpClient client = new HttpClient())
             {
@@ -412,20 +462,24 @@ namespace Helper
             }
         }
 
-        private void btnanydesk_Click(object sender, EventArgs e)
+        private async void btnanydesk_Click(object sender, EventArgs e)
         {
-            string anyDeskPath = Path.Combine(Application.StartupPath, "Programs", "AnyDesk.exe");
+            string anyDeskPath = Path.Combine(ProgramsDir, "AnyDesk.exe");
             if (!File.Exists(anyDeskPath))
             {
-                MessageBox.Show("AnyDesk.exe не найден.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                await DownloadFileAsync(ConfigData.GetProperty("AnyDesk").GetString(), anyDeskPath);
             }
             string arguments = $"--install \"C:\\Program Files (x86)\\AnyDesk\" --start-with-win --create-shortcuts --create-desktop-icon --silent";
-            Process process = new Process();
-            process.StartInfo.FileName = anyDeskPath;
-            process.StartInfo.Arguments = arguments;
-            process.StartInfo.Verb = "runas";
-            process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            Process process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = anyDeskPath,
+                    Arguments = arguments,
+                    Verb = "runas",
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }
+            };
             try
             {
                 process.Start();

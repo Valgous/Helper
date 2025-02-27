@@ -9,21 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Programs\**" />
+    <EmbeddedResource Remove="Programs\**" />
+    <None Remove="Programs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FlaUI.UIA3" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Programs\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Programs\AnyDesk.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Programs\MalwareInstaller.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Programs\PrivaZer.exe">
+    <None Update="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

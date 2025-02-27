@@ -41,9 +41,9 @@
             // 
             // btnshell
             // 
-            btnshell.Location = new Point(31, 415);
+            btnshell.Location = new Point(12, 341);
             btnshell.Name = "btnshell";
-            btnshell.Size = new Size(140, 23);
+            btnshell.Size = new Size(215, 23);
             btnshell.TabIndex = 0;
             btnshell.Text = "Активация PowerShell";
             btnshell.UseVisualStyleBackColor = true;
@@ -51,9 +51,9 @@
             // 
             // btndriver
             // 
-            btndriver.Location = new Point(31, 357);
+            btndriver.Location = new Point(12, 219);
             btndriver.Name = "btndriver";
-            btndriver.Size = new Size(140, 23);
+            btndriver.Size = new Size(215, 23);
             btndriver.TabIndex = 1;
             btndriver.Text = "Драйвер из DriverPack";
             btndriver.UseVisualStyleBackColor = true;
@@ -61,16 +61,16 @@
             // 
             // tbdriver
             // 
-            tbdriver.Location = new Point(31, 386);
+            tbdriver.Location = new Point(12, 312);
             tbdriver.Name = "tbdriver";
-            tbdriver.Size = new Size(202, 23);
+            tbdriver.Size = new Size(215, 23);
             tbdriver.TabIndex = 2;
             tbdriver.Text = "Введите сюда ИД оборудования....";
             tbdriver.DoubleClick += tbdriver_Click;
             // 
             // btncomplex
             // 
-            btncomplex.Location = new Point(573, 42);
+            btncomplex.Location = new Point(12, 82);
             btncomplex.Name = "btncomplex";
             btncomplex.Size = new Size(215, 23);
             btncomplex.TabIndex = 3;
@@ -80,9 +80,9 @@
             // 
             // btnsafe
             // 
-            btnsafe.Location = new Point(31, 328);
+            btnsafe.Location = new Point(12, 190);
             btnsafe.Name = "btnsafe";
-            btnsafe.Size = new Size(140, 23);
+            btnsafe.Size = new Size(215, 23);
             btnsafe.TabIndex = 4;
             btnsafe.Text = "Безопасный режим";
             btnsafe.UseVisualStyleBackColor = true;
@@ -90,9 +90,9 @@
             // 
             // btnanydesk
             // 
-            btnanydesk.Location = new Point(31, 299);
+            btnanydesk.Location = new Point(12, 161);
             btnanydesk.Name = "btnanydesk";
-            btnanydesk.Size = new Size(140, 23);
+            btnanydesk.Size = new Size(215, 23);
             btnanydesk.TabIndex = 5;
             btnanydesk.Text = "Установить AnyDesk";
             btnanydesk.UseVisualStyleBackColor = true;
@@ -110,16 +110,16 @@
             // 
             // tbcore
             // 
-            tbcore.Location = new Point(615, 415);
+            tbcore.Location = new Point(12, 415);
             tbcore.Name = "tbcore";
-            tbcore.Size = new Size(173, 23);
+            tbcore.Size = new Size(215, 23);
             tbcore.TabIndex = 8;
             // 
             // btncore
             // 
-            btncore.Location = new Point(615, 386);
+            btncore.Location = new Point(12, 386);
             btncore.Name = "btncore";
-            btncore.Size = new Size(173, 23);
+            btncore.Size = new Size(215, 23);
             btncore.TabIndex = 7;
             btncore.Text = "Установить кол-во потоков";
             btncore.UseVisualStyleBackColor = true;
@@ -129,7 +129,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(244, 450);
             Controls.Add(tbcore);
             Controls.Add(btncore);
             Controls.Add(btncmdmenu);
@@ -140,7 +140,7 @@
             Controls.Add(btndriver);
             Controls.Add(btnshell);
             Name = "Helper";
-            Text = "Helper";
+            Text = "Helper By Valgous";
             ResumeLayout(false);
             PerformLayout();
         }
